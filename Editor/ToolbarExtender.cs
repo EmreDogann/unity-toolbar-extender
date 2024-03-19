@@ -147,6 +147,11 @@ namespace UnityToolbarExtender
 				GUILayout.EndArea();
 			}
 		}
+
+		public static void Repaint()
+		{
+			ToolbarCallback.Repaint();
+		}
 		
 		public static void GUILeft() {
 			GUILayout.BeginHorizontal();

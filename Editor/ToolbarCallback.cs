@@ -28,6 +28,9 @@ namespace UnityToolbarExtender
 		static FieldInfo m_imguiContainerOnGui = typeof(IMGUIContainer).GetField("m_OnGUIHandler",
 			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 		static ScriptableObject m_currentToolbar;
+		private static IMGUIContainer m_imguiContainer;
+		private static IMGUIContainer m_imguiContainerLeft;
+		private static IMGUIContainer m_imguiContainerRight;
 
 		/// <summary>
 		/// Callback for toolbar OnGUI method.
@@ -35,7 +38,7 @@ namespace UnityToolbarExtender
 		public static Action OnToolbarGUI;
 		public static Action OnToolbarGUILeft;
 		public static Action OnToolbarGUIRight;
-		
+
 		static ToolbarCallback()
 		{
 			EditorApplication.update -= OnUpdate;
@@ -51,15 +54,15 @@ namespace UnityToolbarExtender
 				var toolbars = Resources.FindObjectsOfTypeAll(m_toolbarType);
 				m_currentToolbar = toolbars.Length > 0 ? (ScriptableObject) toolbars[0] : null;
 				if (m_currentToolbar != null)
-				{ 
+				{
 #if UNITY_2021_1_OR_NEWER
 					var root = m_currentToolbar.GetType().GetField("m_Root", BindingFlags.NonPublic | BindingFlags.Instance);
 					var rawRoot = root.GetValue(m_currentToolbar);
 					var mRoot = rawRoot as VisualElement;
-					RegisterCallback("ToolbarZoneLeftAlign", OnToolbarGUILeft);
-					RegisterCallback("ToolbarZoneRightAlign", OnToolbarGUIRight);
+					RegisterCallback("ToolbarZoneLeftAlign", OnToolbarGUILeft, out m_imguiContainerLeft);
+					RegisterCallback("ToolbarZoneRightAlign", OnToolbarGUIRight, out m_imguiContainerRight);
 
-					void RegisterCallback(string root, Action cb) {
+					void RegisterCallback(string root, Action cb, out IMGUIContainer container) {
 						var toolbarZone = mRoot.Q(root);
 
 						var parent = new VisualElement()
@@ -69,11 +72,11 @@ namespace UnityToolbarExtender
 								flexDirection = FlexDirection.Row,
 							}
 						};
-						var container = new IMGUIContainer();
+						container = new IMGUIContainer();
 						container.style.flexGrow = 1;
-						container.onGUIHandler += () => { 
+						container.onGUIHandler += () => {
 							cb?.Invoke();
-						}; 
+						};
 						parent.Add(container);
 						toolbarZone.Add(parent);
 					}
@@ -89,17 +92,26 @@ namespace UnityToolbarExtender
 #endif
 
 					// Get first child which 'happens' to be toolbar IMGUIContainer
-					var container = (IMGUIContainer) visualTree[0];
+					m_imguiContainer = (IMGUIContainer) visualTree[0];
 
 					// (Re)attach handler
-					var handler = (Action) m_imguiContainerOnGui.GetValue(container);
+					var handler = (Action) m_imguiContainerOnGui.GetValue(m_imguiContainer);
 					handler -= OnGUI;
 					handler += OnGUI;
-					m_imguiContainerOnGui.SetValue(container, handler);
-					
+					m_imguiContainerOnGui.SetValue(m_imguiContainer, handler);
 #endif
 				}
 			}
+		}
+
+		internal static void Repaint()
+		{
+#if UNITY_2021_1_OR_NEWER
+			m_imguiContainerLeft.MarkDirtyRepaint();
+			m_imguiContainerRight.MarkDirtyRepaint();
+#else
+			m_imguiContainer.MarkDirtyRepaint();
+#endif
 		}
 
 		static void OnGUI()
