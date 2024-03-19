@@ -1,6 +1,6 @@
 {
-  "name": "com.marijnzwemmer.unity-toolbar-extender",
-  "version": "1.4.2",
+  "name": "com.ems.unity-toolbar-extender",
+  "version": "1.4.3",
   "displayName": "Toolbar Extender",
   "description": "Extend the Unity Toolbar with your own Editor UI code.",
   "unity": "2021.1",
@@ -13,9 +13,8 @@
     "button"
   ],
   "author": {
-    "name": "Marijn Zwemmer",
-    "email": "marijn@marijnzwemmer.com",
-    "url": "https://github.com/marijnz/unity-toolbar-extender"
+    "name": "Emre Dogan",
+    "url": "https://github.com/EmreDogann"
   },
   "samples": [
     {
